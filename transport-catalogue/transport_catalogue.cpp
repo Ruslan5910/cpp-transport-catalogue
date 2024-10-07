@@ -21,17 +21,19 @@ void TransportCatalogue::AddStopAndCoordinates(const std::string& stop, const ge
 }
     
 const TransportCatalogue::Bus* TransportCatalogue::FindRouteByName(std::string_view route_name) const {
-    if (route_info_by_route_name_.find(route_name) == route_info_by_route_name_.end()) {
+    auto it = route_info_by_route_name_.find(route_name);
+    if (it  == route_info_by_route_name_.end()) {
         return nullptr;
     }
-    return route_info_by_route_name_.at(route_name);
+    return it->second;
 }
     
 const TransportCatalogue::Stop* TransportCatalogue::FindStopByName(std::string_view stop_name) const {
-    if (stop_info_by_stop_name_.find(stop_name) == stop_info_by_stop_name_.end()) {
+    auto it = stop_info_by_stop_name_.find(stop_name);
+    if (it == stop_info_by_stop_name_.end()) {
         return nullptr;
     }
-    return stop_info_by_stop_name_.at(stop_name);
+    return it->second;
 }
     
 TransportCatalogue::RouteInfo TransportCatalogue::GetRouteInfo(std::string_view route_name) const {    
@@ -57,11 +59,12 @@ TransportCatalogue::RouteInfo TransportCatalogue::GetRouteInfo(std::string_view 
     return route_info;
 }
        
-std::unordered_set<std::string_view> TransportCatalogue::GetRoutesThrowStop(const std::string& stop_name) const {
-    if (routes_throw_stop_.find(stop_name) == routes_throw_stop_.end()) {
-        return {};
+const std::unordered_set<std::string_view>* TransportCatalogue::GetRoutesThrowStop(std::string_view stop_name) const {
+    auto it = routes_throw_stop_.find(stop_name);
+    if (it == routes_throw_stop_.end()) {
+        return nullptr;
     } 
-    return routes_throw_stop_.at(stop_name);
+    return &(it->second);
 }
 
 } //namespace transport
