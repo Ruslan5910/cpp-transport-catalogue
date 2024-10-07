@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "geo.h"
 #include "transport_catalogue.h"
 
@@ -26,6 +28,18 @@ struct CommandDescription {
     
 class InputReader {
 public:
+   explicit InputReader(std::istream& in)
+       : in_(in) 
+    {
+        int base_request_count;
+        in_ >> base_request_count >> std::ws;
+        for (int i = 0; i < base_request_count; ++i) {
+            std::string line;
+            std::getline(in_, line);
+            ParseLine(line);
+        }
+    }      
+
     /**
      * Парсит строку в структуру CommandDescription и сохраняет результат в commands_
      */
@@ -38,6 +52,7 @@ public:
 
 private:
     std::vector<parsewords::CommandDescription> commands_;
+    std::istream& in_;
 };
     
 } // namespace transport
