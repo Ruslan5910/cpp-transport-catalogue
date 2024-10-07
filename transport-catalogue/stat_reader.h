@@ -8,6 +8,6 @@
 
 namespace transport {
 
-void ParseAndPrintStat(const TransportCatalogue& tansport_catalogue, std::string_view request, std::ostream& output);
+void ParseAndPrintStat(const TransportCatalogue& tansport_catalogue, std::ostream& output, std::istream& input);
     
 } // namespace transport
