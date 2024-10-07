@@ -46,7 +46,7 @@ public:
     RouteInfo GetRouteInfo(std::string_view route_name) const;
     
     // получить маршруты проходящие через остановку
-    std::unordered_set<std::string_view> GetRoutesThrowStop(const std::string& stop_name) const;
+    const std::unordered_set<std::string_view>* GetRoutesThrowStop(std::string_view stop_name) const;
     
 private:
     std::deque<Stop> stops_;
