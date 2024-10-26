@@ -49,7 +49,6 @@ std::string_view Trim(std::string_view string) {
  */
 std::vector<std::string_view> Split(std::string_view string, char delim) {
     std::vector<std::string_view> result;
-
     size_t pos = 0;
     while ((pos = string.find_first_not_of(' ', pos)) < string.length()) {
         auto delim_pos = string.find(delim, pos);
@@ -61,10 +60,10 @@ std::vector<std::string_view> Split(std::string_view string, char delim) {
         }
         pos = delim_pos + 1;
     }
-
     return result;
 }
 
+                                                                        
 /**
  * Парсит маршрут.
  * Для кольцевого маршрута (A>B>C>A) возвращает массив названий остановок [A,B,C,A]
@@ -78,7 +77,6 @@ std::vector<std::string_view> ParseRoute(std::string_view route) {
     auto stops = Split(route, '-');
     std::vector<std::string_view> results(stops.begin(), stops.end());
     results.insert(results.end(), std::next(stops.rbegin()), stops.rend());
-
     return results;
 }
 
@@ -103,6 +101,31 @@ CommandDescription ParseCommandDescription(std::string_view line) {
             std::string(line.substr(colon_pos + 1))};
 }
     
+ParseDescription ParseCoordinatesAndDistances (std::string_view line) {
+    auto first_comma = line.find(',');
+    auto second_comma = line.find(',', first_comma + 1);
+    if (second_comma == line.npos) {
+        return {line.substr(1), {}};
+    } else {
+        return {line.substr(1, second_comma - 1), line.substr(second_comma + 2)};
+    }
+}
+    
+StopsAndMeters ParseDistance(std::string_view line) {
+    if (line.empty()) {
+        return {};
+    }
+    StopsAndMeters result;
+    std::vector<std::string_view> parsed_line = Split(line, ',');           
+    for (int i = 0; i < parsed_line.size(); ++i) {
+        std::vector<std::string_view> words = Split(parsed_line[i], ' ');
+        result.meters.push_back(std::stoi(std::string(words[0])));
+        auto to_pos = parsed_line[i].find_first_of('t');
+        result.stops_to.push_back(parsed_line[i].substr(to_pos + 3));
+    }
+    return result;
+}
+    
 } // namespace parsewords
 
 void InputReader::ParseLine(std::string_view line) {
@@ -113,23 +136,32 @@ void InputReader::ParseLine(std::string_view line) {
 }
 
 void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue& catalogue) {
-    std::sort(commands_.begin(), commands_.end(), [](parsewords::CommandDescription& lhs, 
+        std::sort(commands_.begin(), commands_.end(), [](parsewords::CommandDescription& lhs, 
                                                      parsewords::CommandDescription& rhs) {
-                                                     return lhs.command > rhs.command;
-                                                  });
+                                                     return lhs.command > rhs.command;});
     for (int i = 0; i < commands_.size(); ++i) {
         if (commands_[i].command == "Stop") {
-            catalogue.AddStopAndCoordinates(commands_[i].id, parsewords::ParseCoordinates(commands_[i].description));
-        } else if (commands_[i].command == "Bus") {
-            std::vector<std::string> parsed_route;
+            catalogue.AddStopAndCoordinates(commands_[i].id, parsewords::ParseCoordinates(parsewords::ParseCoordinatesAndDistances(commands_[i].description).coordinates));
+        } else if (commands_[i].command != "Stop" && commands_[i].command != "Bus") {
+            throw std::invalid_argument("Unknown command");
+        }
+    }
+    for (int i = 0; i < commands_.size(); ++i) {
+        if (commands_[i].command == "Stop") {
+            parsewords::StopsAndMeters stops_meters = parsewords::ParseDistance(parsewords::ParseCoordinatesAndDistances(commands_[i].description).distances);
+            for (int m = 0; m < stops_meters.stops_to.size(); ++m) {
+                catalogue.AddDistance(commands_[i].id, stops_meters.stops_to[m], stops_meters.meters[m]);
+            }
+        }
+    }
+    for (int i = 0; i <commands_.size(); ++i) {
+        if (commands_[i].command == "Bus") {
+            std::vector<std::string> parsed_route;  
             for (std::string_view stop : parsewords::ParseRoute(commands_[i].description)) {
                 parsed_route.push_back(std::string(stop));
             }
             catalogue.AddRouteAndStops(commands_[i].id, parsed_route);
-        } else {
-            throw std::invalid_argument("Unknown command");
         }
     }
-}
-    
+}   
 } // namespace transport
