@@ -8,21 +8,12 @@
 #include <deque>
 
 #include "geo.h"
+#include "domain.h"
 
 namespace transport {
     
 class TransportCatalogue {
 public:   
-
-    struct Stop {
-        std::string stop_name;
-        geo::Coordinates stop_coordinates;
-    };
-
-    struct Bus {
-        std::string route_name;
-        std::vector<std::string> route_stops;
-    };
     
     struct RouteInfo {
         size_t count_stops = 0;
@@ -40,7 +31,7 @@ public:
     };
     
     // добавление маршрута в базу
-    void AddRouteAndStops(const std::string& route, const std::vector<std::string>& stops);
+    void AddRouteAndStops(const std::string& route, const std::vector<std::string>& stops, bool is_roundtrip);
     
     // добавление остановки в базу
     void AddStopAndCoordinates(const std::string& stop, const geo::Coordinates& coordinates);
@@ -62,6 +53,10 @@ public:
     
     // получить маршруты проходящие через остановку
     const std::unordered_set<std::string_view>* GetRoutesThrowStop(std::string_view stop_name) const;
+    
+    const std::unordered_map<std::string_view, const Stop*> GetStops() const;
+    
+    const std::unordered_map<std::string_view, const Bus*> GetRoutes() const;
     
 private:
     std::deque<Stop> stops_;
