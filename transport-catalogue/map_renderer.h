@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include <map>
 
 inline const double EPSILON = 1e-6;
 bool IsZero(double value);
@@ -98,4 +99,20 @@ public:
     
 private:
     VisualSettings settings_;
+    
+    std::vector<svg::Polyline> DrawRouteLines(std::unordered_map<std::string_view, const Bus*> route_info_by_route_name,
+                                 std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
+                                 SphereProjector projector) const;
+    
+    std::vector<svg::Text> DrawRouteNames(std::unordered_map<std::string_view, const Bus*> route_info_by_route_name,
+                                 std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
+                                 SphereProjector projector) const;
+    
+    std::vector<svg::Circle> DrawStopCircles(std::unordered_map<std::string_view, const Bus*> route_info_by_route_name,
+                                 std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
+                                 SphereProjector projector) const;
+    
+    std::vector<svg::Text> DrawStopNames(std::unordered_map<std::string_view, const Bus*> route_info_by_route_name,
+                                 std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
+                                 SphereProjector projector) const;
 };
