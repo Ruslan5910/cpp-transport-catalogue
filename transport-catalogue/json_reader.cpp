@@ -102,27 +102,6 @@ void JsonReader::AddVisualSettings(MapRenderer& renderer) {
     renderer.SetSettings(settings);
 }
 
-/*
-void JsonReader::AddStopsAndBusesForRendering(const RequestHandler& handler, const MapRender render) {
-    std::vector<Bus> buses_for_rendering;
-    std::vector<Stop> stops_for_rendering;
-    auto base_commands = doc_.GetRoot().AsMap().at("base_requests"s).AsArray();
-    for (const auto command : commands) {
-        if (command.AsMap().at("type"s).AsString() == "Stop"s) {
-            stops_for_rendering.push_back({command.AsMap().at("name"s).AsString(), 
-                                          {command.AsMap().at("latitude"s).AsDouble(), command.AsMap().at("longitude"s).AsDouble()}});
-        } else if (command.AsMap().at("type"s).AsString() == "Bus"s) {
-            std::vector<std::string> stops;
-            for (const auto& stop : command.AsMap().at("stops"s).AsArray()) {
-                stops.push_back(stop.AsString());
-            }
-            buses_for_rendering.push_back({command.AsMap().at("name").AsStirng(), stops});
-        }
-    }
-    render(buses_for_rendering, stops_for_rendering);
-}
-*/
-
 void JsonReader::PrintCatalogueInfo(const RequestHandler& catalogue, std::ostream& out) const {
     json::Array all_answers;
     for (const auto& [request_type, commands] : doc_.GetRoot().AsMap()) {
