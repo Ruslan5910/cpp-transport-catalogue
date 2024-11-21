@@ -187,12 +187,12 @@ Node LoadNull(istream& in) {
         if (c == n[i]) {
             continue;
         } else {
-            throw json::ParsingError("Тип не соответствует ожидаемому null");
+            throw json::ParsingError("The type does not match the expected null");
         }
     }
     char next = in.peek();    
     if (next != EOF && next != ' ' && next != ',' && next != ']' && next != '}' && next != '\n' && next != '\t') {
-        throw json::ParsingError("Тип не соответствует ожидаемому null");    
+        throw json::ParsingError("The type does not match the expected null");
     }
     return Node(nullptr);
 }
@@ -205,12 +205,12 @@ Node LoadBoolTrue(istream& in) {
         if (c == t[i]) {
             continue;
         } else {
-            throw json::ParsingError("Тип не соответствует ожидаемому true");
+            throw json::ParsingError("The type does not match the expected true");
         }
     }
     char next = in.peek();    
     if (next != EOF && next != ' ' && next != ',' && next != ']' && next != '}' && next != '\n' && next != '\t') {
-        throw json::ParsingError("Тип не соответствует ожидаемому true");    
+        throw json::ParsingError("The type does not match the expected true");    
     }
     return Node(true);
 }
@@ -223,12 +223,12 @@ Node LoadBoolFalse(istream& in) {
         if (c == t[i]) {
             continue;
         } else {
-            throw json::ParsingError("Тип не соответствует ожидаемому false");
+            throw json::ParsingError("The type does not match the expected false");
         }
     }
     char next = in.peek();    
     if (next != EOF && next != ' ' && next != ',' && next != ']' && next != '}' && next != '\n' && next != '\t') {
-        throw json::ParsingError("Тип не соответствует ожидаемому true");    
+        throw json::ParsingError("The type does not match the expected false");    
     }
     return Node(false);
 }
@@ -318,13 +318,13 @@ bool Node::IsString() const {
     
 int Node::AsInt() const {
     if (!IsInt()) {
-        throw logic_error("Не является int");
+        throw logic_error("The type does not match the expected int"s);
     }
     return get<int>(value_);
 }
 bool Node::AsBool() const {
     if (!IsBool()) {
-        throw logic_error("Не является bool");
+        throw logic_error("The type does not match the expected bool"s);
     }
     return get<bool>(value_);
 }
@@ -335,24 +335,24 @@ double Node::AsDouble() const {
     } else if (IsDouble()) {
         return get<double>(value_);
     } else {
-        throw logic_error("Не является int или double");
+        throw logic_error("The type does not match the expected int or double"s);
     }
 }
 const string& Node::AsString() const {
     if (!IsString()) {
-        throw std::logic_error("Не является string");
+        throw std::logic_error("The type does not match the expected string"s);
     }
     return get<string>(value_);
 }
 const Array& Node::AsArray() const {
     if (!IsArray()) {
-        throw logic_error("Не является Array");
+        throw logic_error("The type does not match the expected Array"s);
     }
     return get<Array>(value_);
 }
 const Dict& Node::AsMap() const {
     if (!IsMap()) {
-        throw logic_error("Не является map");
+        throw logic_error("The type does not match the expected map");
     }
     return get<Dict>(value_);
 }
