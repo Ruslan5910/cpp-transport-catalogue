@@ -1,20 +1,22 @@
 #include "map_renderer.h"
 
-#include <map>
 #include <algorithm>
 #include <utility>
 #include <set>
+
 
 bool IsZero(double value) {
     return std::abs(value) < EPSILON;
 }
 
+
 struct StringFirstComparator {
     bool operator()(const std::pair<std::string, geo::Coordinates>& lhs,
                     const std::pair<std::string, geo::Coordinates>& rhs) const {
-        return lhs.first < rhs.first; 
+        return lhs.first < rhs.first;
     }
 };
+
 
 svg::Point SphereProjector::operator()(geo::Coordinates coords) const {
     return {
@@ -23,17 +25,17 @@ svg::Point SphereProjector::operator()(geo::Coordinates coords) const {
     };
 }
 
+
 void MapRenderer::SetSettings(VisualSettings settings) {
     settings_ = settings;
 }
+
+
 svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
                                            std::unordered_map<std::string_view, const Bus*> route_info_by_route_name) const {
     svg::Document doc;
-    size_t color_palette_index = 0;
     std::vector<geo::Coordinates> all_coordinates;
     all_coordinates.reserve(stop_info_by_stop_name.size());
-    std::vector<std::vector<geo::Coordinates>> coordinates_for_render;
-    coordinates_for_render.reserve(route_info_by_route_name.size());
     for (const auto& [stop_name, stop_struct] : stop_info_by_stop_name) {
         for (const auto& [key, value] : route_info_by_route_name) {
             if (std::find(value->route_stops.begin(), value->route_stops.end(), stop_name) != value->route_stops.end()) {
@@ -43,11 +45,48 @@ svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, 
     }
     SphereProjector projector(all_coordinates.begin(), all_coordinates.end(),
                               settings_.width, settings_.height, settings_.padding);
+    //----------------------ОТРИСОВКА ЛИНИЙ МАРШРУТОВ-----------------------------------
+    std::vector<svg::Polyline> polylines_for_render = DrawRouteLines(route_info_by_route_name,
+                                                                     stop_info_by_stop_name, projector);
+    for (svg::Polyline polyline : polylines_for_render) {
+        doc.Add(polyline);
+    }
+    //----------------------ОТРИСОВКА НАЗВАНИЙ МАРШРУТОВ--------------------------------
+    std::vector<svg::Text> route_names_texts = DrawRouteNames(route_info_by_route_name,
+                                                  stop_info_by_stop_name, projector);
+    for (svg::Text text : route_names_texts) {
+        doc.Add(text);
+    }
+    //-----------------ОТРИСОВКА КРУГОВ ОБОЗНАЧАЮЩИХ ОСТАНОВКИ--------------------------
+    std::vector<svg::Circle> circles = DrawStopCircles(route_info_by_route_name,
+                                                  stop_info_by_stop_name, projector);
+    for (svg::Circle circle : circles) {
+        doc.Add(circle);
+    }
+    //----------------------ОТРИСОВКА НАЗВАНИЯ ОСТАНОВОК--------------------------------
+    std::vector<svg::Text> stop_names_texts = DrawStopNames(route_info_by_route_name,
+                                                  stop_info_by_stop_name, projector);
+    for (svg::Text text: stop_names_texts) {
+        doc.Add(text);
+    }
+    return doc;
+}
+
     
+VisualSettings MapRenderer::GetSettings() {
+    return settings_;
+}
+
+
+std::vector<svg::Polyline> MapRenderer::DrawRouteLines(std::unordered_map<std::string_view, const Bus*> route_info_by_route_name,
+                                 std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
+                                 SphereProjector projector) const {
+    std::vector<svg::Polyline> polylines;
+    size_t color_palette_index = 0;
+    std::vector<std::vector<geo::Coordinates>> coordinates_for_render;
+    coordinates_for_render.reserve(route_info_by_route_name.size());
     std::map<std::string_view, const Bus*> sorted_by_name_routes_info(route_info_by_route_name.begin(),
                                                                       route_info_by_route_name.end());
-    
-    //---------------------------------------------------------------ОТРИСОВКА ЛИНИЙ МАРШРУТА----------------------------------------------------------------
     for (const auto& [route_name, route_struct] : sorted_by_name_routes_info) {
         if (route_struct->route_stops.size()) {
             std::vector<geo::Coordinates> route_stops_coordinates;
@@ -77,14 +116,21 @@ svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, 
                 .SetStrokeWidth(settings_.line_width)
                 .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
                 .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-        doc.Add(polyline);
+        polylines.push_back(polyline);
         ++color_palette_index;
         if (color_palette_index == settings_.color_palette.size()) {
             color_palette_index = 0;
         }
     }
-    
-    //-------------------------------------------------------------ОТРИСОВКА НАЗВАНИЙ МАРШРУТОВ----------------------------------------------------------------
+    return polylines;
+}
+
+std::vector<svg::Text> MapRenderer::DrawRouteNames(std::unordered_map<std::string_view, const Bus*> route_info_by_route_name,
+                                 std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
+                                 SphereProjector projector) const {
+    std::vector<svg::Text> texts;
+    std::map<std::string_view, const Bus*> sorted_by_name_routes_info(route_info_by_route_name.begin(),
+                                                                      route_info_by_route_name.end());
     std::vector<std::vector<std::pair<std::string, geo::Coordinates>>> all_route_names_for_render;
     all_route_names_for_render.reserve(sorted_by_name_routes_info.size());
     for (const auto& [route_name, route_struct] : sorted_by_name_routes_info) {
@@ -106,7 +152,6 @@ svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, 
             all_route_names_for_render.push_back(route_for_render);
         }
     }
-
     size_t color_index = 0;
     for (const std::vector<std::pair<std::string, geo::Coordinates>>& vec_name_and_coord : all_route_names_for_render) {
         for (const std::pair<std::string, geo::Coordinates>& name_and_coord : vec_name_and_coord) {
@@ -123,6 +168,7 @@ svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, 
                       .SetFontFamily("Verdana")
                       .SetFontWeight("bold")
                       .SetData(name_and_coord.first);
+            texts.push_back(underlayer);
             text.SetFillColor(settings_.color_palette[color_index])
                 .SetPosition(projector(name_and_coord.second))
                 .SetOffset(settings_.bus_label_offset)
@@ -130,17 +176,22 @@ svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, 
                 .SetFontFamily("Verdana")
                 .SetFontWeight("bold")
                 .SetData(name_and_coord.first);
-            doc.Add(underlayer);
-            doc.Add(text);
+            texts.push_back(text);
         }
         ++color_index;
         if (color_index == settings_.color_palette.size()) {
             color_index = 0;
         }
     }
-    
-    //-------------------------------------------------------ОТРИСОВКА КРУГОВ ОБОЗНАЧАЮЩИХ ОСТАНОВКИ-----------------------------------------------------------
-    
+    return texts;
+}
+
+std::vector<svg::Circle> MapRenderer::DrawStopCircles(std::unordered_map<std::string_view, const Bus*> route_info_by_route_name,
+                                 std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
+                                 SphereProjector projector) const {
+    std::vector<svg::Circle> circles;
+    std::map<std::string_view, const Bus*> sorted_by_name_routes_info(route_info_by_route_name.begin(),
+                                                                      route_info_by_route_name.end());
     std::set<std::pair<std::string, geo::Coordinates>, StringFirstComparator> sorted_stops_for_render;
     for (const auto& [route_name, route_struct] : sorted_by_name_routes_info) {
         for (const std::string& stop : route_struct->route_stops) {
@@ -152,12 +203,17 @@ svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, 
         circle.SetCenter(projector(stop_and_coord.second))
               .SetRadius(settings_.stop_radius)
               .SetFillColor("white");
-        doc.Add(circle);
+        circles.push_back(circle);
     }
-    
-    
-    //-------------------------------------------------------------ОТРИСОВКА НАЗВАНИЯ ОСТАНОВОК----------------------------------------------------------------
-    
+    return circles;
+}
+
+std::vector<svg::Text> MapRenderer::DrawStopNames(std::unordered_map<std::string_view, const Bus*> route_info_by_route_name,
+                                 std::unordered_map<std::string_view, const Stop*> stop_info_by_stop_name,
+                                 SphereProjector projector) const {
+    std::vector<svg::Text> texts;
+    std::map<std::string_view, const Bus*> sorted_by_name_routes_info(route_info_by_route_name.begin(),
+                                                                      route_info_by_route_name.end());
     std::set<std::pair<std::string, geo::Coordinates>, StringFirstComparator> sorted_stop_names_for_render;
     for (const auto& [route_name, route_struct] : sorted_by_name_routes_info) {
         for (const std::string& stop: route_struct->route_stops) {
@@ -176,6 +232,7 @@ svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, 
                   .SetFontSize(settings_.stop_label_font_size)
                   .SetFontFamily("Verdana")
                   .SetData(stop_and_coord.first);
+        texts.push_back(underlayer);
         svg::Text text;
         text.SetFillColor("black")
             .SetPosition(projector(stop_and_coord.second))
@@ -183,14 +240,7 @@ svg::Document MapRenderer::MakeSvgDocument(std::unordered_map<std::string_view, 
             .SetFontSize(settings_.stop_label_font_size)
             .SetFontFamily("Verdana")
             .SetData(stop_and_coord.first);
-        doc.Add(underlayer);
-        doc.Add(text);
+        texts.push_back(text);
     }
-    
-    return doc;
-}
-    
-    
-VisualSettings MapRenderer::GetSettings() {
-    return settings_;
+    return texts;
 }
