@@ -50,46 +50,40 @@ const Stop* TransportCatalogue::FindStopByName(std::string_view stop_name) const
     return it->second;
 }
     
-    /*
-int CalculateRealRouteDistance (std::string_view route_name) {
-    int real_distance = 0;   
-    
-}
-   */ 
-    
 TransportCatalogue::RouteInfo TransportCatalogue::GetRouteInfo(std::string_view route_name) const {    
     if (route_info_by_route_name_.find(route_name) == route_info_by_route_name_.end()) {
         return {};
     }
     RouteInfo route_info;
     std::unordered_set<std::string> unique_stops;
-    if (route_info_by_route_name_.at(route_name)->is_roundtrip == true) {
-        route_info.count_stops = route_info_by_route_name_.at(route_name)->route_stops.size();
-        for (size_t i = 0; i < route_info_by_route_name_.at(route_name)->route_stops.size(); ++i) {
-            unique_stops.insert(route_info_by_route_name_.at(route_name)->route_stops[i]);
+    const Bus* route_info_by_name = route_info_by_route_name_.at(route_name);
+    if (route_info_by_name->is_roundtrip == true) {
+        route_info.count_stops = route_info_by_name->route_stops.size();
+        for (size_t i = 0; i < route_info_by_name->route_stops.size(); ++i) {
+            unique_stops.insert(route_info_by_name->route_stops[i]);
         }
         route_info.count_unique_stops = unique_stops.size();
-        for (size_t i = 0; i < route_info_by_route_name_.at(route_name)->route_stops.size() - 1; ++i) {
-            route_info.route_length += GetDistance(FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i])->stop_name, 
-                                               FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i + 1])->stop_name);
-            route_info.straight_line_distance += geo::ComputeDistance((FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i]))->stop_coordinates,  
-                                                                  (FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i + 1]))->stop_coordinates);
+        for (size_t i = 0; i < route_info_by_name->route_stops.size() - 1; ++i) {
+            route_info.route_length += GetDistance(FindStopByName(route_info_by_name->route_stops[i])->stop_name, 
+                                                   FindStopByName(route_info_by_name->route_stops[i + 1])->stop_name);
+            route_info.straight_line_distance += geo::ComputeDistance((FindStopByName(route_info_by_name->route_stops[i]))->stop_coordinates,  
+                                                                  (FindStopByName(route_info_by_name->route_stops[i + 1]))->stop_coordinates);
         }
-    } else if (route_info_by_route_name_.at(route_name)->is_roundtrip == false) {
-        route_info.count_stops = (route_info_by_route_name_.at(route_name)->route_stops.size() * 2) - 1;
-        for (size_t i = 0; i < route_info_by_route_name_.at(route_name)->route_stops.size(); ++i) {
-            unique_stops.insert(route_info_by_route_name_.at(route_name)->route_stops[i]);
+    } else if (route_info_by_name->is_roundtrip == false) {
+        route_info.count_stops = (route_info_by_name->route_stops.size() * 2) - 1;
+        for (size_t i = 0; i < route_info_by_name->route_stops.size(); ++i) {
+            unique_stops.insert(route_info_by_name->route_stops[i]);
         }
         route_info.count_unique_stops = unique_stops.size();
-        for (size_t i = 0; i < route_info_by_route_name_.at(route_name)->route_stops.size() - 1; ++i) {
-            route_info.route_length += GetDistance(FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i])->stop_name, 
-                                               FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i + 1])->stop_name);
-            route_info.straight_line_distance += geo::ComputeDistance((FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i]))->stop_coordinates,  
-                                                                  (FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i + 1]))->stop_coordinates) * 2;
+        for (size_t i = 0; i < route_info_by_name->route_stops.size() - 1; ++i) {
+            route_info.route_length += GetDistance(FindStopByName(route_info_by_name->route_stops[i])->stop_name, 
+                                               FindStopByName(route_info_by_name->route_stops[i + 1])->stop_name);
+            route_info.straight_line_distance += geo::ComputeDistance((FindStopByName(route_info_by_name->route_stops[i]))->stop_coordinates,  
+                                                                  (FindStopByName(route_info_by_name->route_stops[i + 1]))->stop_coordinates) * 2;
         }
-        for (int i = route_info_by_route_name_.at(route_name)->route_stops.size() - 1; i > 0; --i) {
-            route_info.route_length += GetDistance(FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i])->stop_name,
-                                                   FindStopByName(route_info_by_route_name_.at(route_name)->route_stops[i - 1])->stop_name);
+        for (int i = route_info_by_name->route_stops.size() - 1; i > 0; --i) {
+            route_info.route_length += GetDistance(FindStopByName(route_info_by_name->route_stops[i])->stop_name,
+                                                   FindStopByName(route_info_by_name->route_stops[i - 1])->stop_name);
         }
     }
     return route_info;
