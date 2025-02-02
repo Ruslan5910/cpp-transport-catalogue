@@ -1,5 +1,7 @@
 #include "json_reader.h"
 #include "json_builder.h"
+#include "transport_router.h"
+#include "transport_router.h"
 
 #include <algorithm>
 #include <vector>
@@ -46,6 +48,14 @@ void JsonReader::AddTransportInfo(transport::TransportCatalogue& catalogue) cons
             }
         }
     }
+}
+
+void JsonReader::AddRouteSettings(TransportRouter& transport_router) const {
+    RouteSettings route_settings;
+    auto& routing_settings = doc_.GetRoot().AsDict().at("routing_settings"s).AsDict();
+    route_settings.bus_velocity = routing_settings.at("bus_velocity"s).AsDouble();
+    route_settings.bus_wait_time = routing_settings.at("bus_wait_time"s).AsInt();
+    transport_router.AddRouteSettings(route_settings);
 }
 
 json::Document JsonReader::GetDocument() const {
@@ -165,9 +175,51 @@ void JsonReader::PrintCatalogueInfo(const RequestHandler& catalogue, std::ostrea
                                                    .Key("request_id"s).Value(command.AsDict().at("id"s).AsInt())
                                                .EndDict()
                                                .Build());
+                } else if (command.AsDict().at("type"s) == "Route"s) {
+                    std::string from = command.AsDict().at("from"s).AsString();
+                    std::string to = command.AsDict().at("to"s).AsString();
+                    const auto& value = catalogue.BuildRoute(from, to);
+                    if (value.has_value()) {
+                        json::Array graph_results;
+                        size_t span = 0;
+                        for (const auto& [key, edge] : value->edge_info_by_id) {
+                            size_t i = 0;
+                            graph_results.push_back(json::Builder{}
+                                                                .StartDict()
+                                                                    .Key("stop_name"s).Value(key)
+                                                                    .Key("time"s).Value(value->bus_wait_time)
+                                                                    .Key("type"s).Value("Wait"s)
+                                                               .EndDict()
+                                                               .Build());
+                            graph_results.push_back(json::Builder{}
+                                                                .StartDict()
+                                                                     .Key("bus"s).Value(edge.route_name)
+                                                                     .Key("span_count"s).Value(static_cast<int>(edge.to - edge.from + 1 - span))
+                                                                     .Key("time").Value(edge.weight - value->bus_wait_time)
+                                                                     .Key("type"s).Value("Bus"s)
+                                                                .EndDict()
+                                                            .Build());
+                            ++i;
+                            span = edge.to - edge.from + 1;
+                        }
+                        all_answers.push_back(json::Builder{}
+                                                   .StartDict()
+                                                        .Key("items"s).Value(graph_results)
+                                                        .Key("request_id"s).Value(command.AsDict().at("id"s).AsInt())
+                                                        .Key("total_time"s).Value(value->total_time)
+                                                    .EndDict()
+                                                    .Build());
+                    } else if (!value) {
+                        all_answers.push_back(json::Builder{}
+                                                   .StartDict()
+                                                       .Key("request_id"s).Value(command.AsDict().at("id"s).AsInt())
+                                                       .Key("error_message"s).Value("not found"s)
+                                                   .EndDict()
+                                                   .Build());
+                    }
                 }
             }
         }
     }
     json::Print(json::Document{json::Node{all_answers}}, out);
-}
+};
