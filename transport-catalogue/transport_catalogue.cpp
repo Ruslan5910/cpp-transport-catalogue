@@ -99,7 +99,14 @@ int TransportCatalogue::GetDistance(std::string_view from, std::string_view to) 
     }
     return it->second;
 }   
+
+const std::deque<Bus> TransportCatalogue::GetAllRoutes() const {
+    return routes_;
+}
     
+const std::deque<Stop> TransportCatalogue::GetAllStops() const {
+    return stops_;
+}
        
 const std::unordered_set<std::string_view>* TransportCatalogue::GetRoutesThrowStop(std::string_view stop_name) const {
     auto it = routes_throw_stop_.find(stop_name);
