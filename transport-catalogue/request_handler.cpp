@@ -1,7 +1,7 @@
 #include "request_handler.h"
 
-RequestHandler::RequestHandler(const transport::TransportCatalogue& db, const MapRenderer& renderer)
-    : db_(db), renderer_(renderer) {}
+RequestHandler::RequestHandler(const transport::TransportCatalogue& db, const MapRenderer& renderer, TransportRouter& transport_router)
+    : db_(db), renderer_(renderer), transport_router_(transport_router) {}
 
 std::optional<transport::TransportCatalogue::RouteInfo> RequestHandler::GetBusStat(const std::string_view& bus_name) const {
     if (db_.GetRouteInfo(bus_name).count_stops == 0) {
@@ -16,4 +16,12 @@ const std::unordered_set<std::string_view>* RequestHandler::GetBusesByStop(const
 
 svg::Document RequestHandler::RenderMap() const {
     return renderer_.MakeSvgDocument(db_.GetStops(), db_.GetRoutes());
+}
+
+void RequestHandler::UploadTransportCatalogue() {
+    return transport_router_.AddGraph(db_);
+}
+
+std::optional<GraphResults> RequestHandler::BuildRoute(std::string_view from, std::string_view to) const {
+    return transport_router_.BuildRoute(from, to);
 }
