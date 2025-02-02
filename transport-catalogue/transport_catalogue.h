@@ -51,6 +51,10 @@ public:
     // получение дистанции между остановками
     int GetDistance(std::string_view from, std::string_view to) const;
     
+    const std::deque<Bus> GetAllRoutes() const;
+    
+    const std::deque<Stop> GetAllStops() const;
+    
     // получить маршруты проходящие через остановку
     const std::unordered_set<std::string_view>* GetRoutesThrowStop(std::string_view stop_name) const;
     
