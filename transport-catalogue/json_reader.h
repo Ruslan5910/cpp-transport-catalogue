@@ -12,6 +12,8 @@ public:
     
     void AddTransportInfo(transport::TransportCatalogue& catalogue) const;
     
+    void AddRouteSettings(TransportRouter& transport_router) const;
+    
     json::Document GetDocument() const;
     
     void AddVisualSettings(MapRenderer& settings);
