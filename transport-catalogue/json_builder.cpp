@@ -1,6 +1,5 @@
 #include "json_builder.h"
 
-
 namespace json {
 
 DictItemContext Builder::StartDict() {
