@@ -10,6 +10,11 @@ int main() {
     reader.AddTransportInfo(catalogue);
     MapRenderer renderer;
     reader.AddVisualSettings(renderer);
-    RequestHandler handler(catalogue, renderer);
+
+    RouteSettings settings = reader.GetRouteSettings();
+    TransportRouter transport_router(settings, catalogue);
+
+    RequestHandler handler(catalogue, renderer, transport_router);
+
     reader.PrintCatalogueInfo(handler, std::cout);
 }
