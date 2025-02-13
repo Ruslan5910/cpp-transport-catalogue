@@ -12,7 +12,7 @@ public:
     
     void AddTransportInfo(transport::TransportCatalogue& catalogue) const;
     
-    void AddRouteSettings(TransportRouter& transport_router) const;
+    RouteSettings GetRouteSettings() const;
     
     json::Document GetDocument() const;
     
