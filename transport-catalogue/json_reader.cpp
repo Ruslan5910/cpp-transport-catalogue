@@ -50,12 +50,12 @@ void JsonReader::AddTransportInfo(transport::TransportCatalogue& catalogue) cons
     }
 }
 
-void JsonReader::AddRouteSettings(TransportRouter& transport_router) const {
+RouteSettings JsonReader::GetRouteSettings() const {
     RouteSettings route_settings;
     auto& routing_settings = doc_.GetRoot().AsDict().at("routing_settings"s).AsDict();
     route_settings.bus_velocity = routing_settings.at("bus_velocity"s).AsDouble();
     route_settings.bus_wait_time = routing_settings.at("bus_wait_time"s).AsInt();
-    transport_router.AddRouteSettings(route_settings);
+    return route_settings;
 }
 
 json::Document JsonReader::GetDocument() const {
