@@ -1,27 +1,26 @@
-#pragma once
+#pragma once 
 
-#include "map_renderer.h"
-#include "transport_catalogue.h"
-#include "transport_router.h"
+#include "map_renderer.h" 
 
-#include <optional>
+#include "transport_catalogue.h" 
+#include "transport_router.h" 
 
-class RequestHandler {
-public:
-    RequestHandler(const transport::TransportCatalogue& db, const MapRenderer& renderer, TransportRouter& transport_router);
+#include <optional> 
+ 
+class RequestHandler { 
+public: 
+    RequestHandler(const transport::TransportCatalogue& db, const MapRenderer& renderer, TransportRouter& transport_router); 
 
-    std::optional<transport::TransportCatalogue::RouteInfo> GetBusStat(const std::string_view& bus_name) const;
+    std::optional<transport::TransportCatalogue::RouteInfo> GetBusStat(const std::string_view& bus_name) const; 
 
-    const std::unordered_set<std::string_view>* GetBusesByStop(const std::string_view& stop_name) const;
+    const std::unordered_set<std::string_view>* GetBusesByStop(const std::string_view& stop_name) const; 
 
-    svg::Document RenderMap() const;
-    
-    void UploadTransportCatalogue();
-    
-    std::optional<GraphResults> BuildRoute(std::string_view from, std::string_view to) const;
+    svg::Document RenderMap() const; 
 
-private:
-    const transport::TransportCatalogue& db_;
-    const MapRenderer& renderer_;
-    TransportRouter& transport_router_;
-};
+    std::optional<GraphResults> BuildRoute(std::string_view from, std::string_view to) const; 
+
+private: 
+    const transport::TransportCatalogue& db_; 
+    const MapRenderer& renderer_; 
+    TransportRouter& transport_router_; 
+}; 
