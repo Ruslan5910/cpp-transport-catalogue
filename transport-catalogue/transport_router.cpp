@@ -2,6 +2,14 @@
 
 #include <cstdint>
 
+int seconds_in_hour = 3600;
+int meters_per_kilometer = 1000;
+int seconds_in_minute = 60;
+
+TransportRouter::TransportRouter(RouteSettings settings, const transport::TransportCatalogue& catalogue) {
+    AddRouteSettings(settings);
+    AddGraph(catalogue);
+}
 
 void TransportRouter::AddRouteSettings(RouteSettings settings) {
     settings_ = settings;
@@ -27,7 +35,7 @@ void TransportRouter::AddGraph(const transport::TransportCatalogue& catalogue) {
                     edge1.route_name = route.route_name;
                     route_segment_distance_l += catalogue.GetDistance(route.route_stops[to - 1],
                                                                       route.route_stops[to]);
-                    edge1.weight = (route_segment_distance_l / ((settings_.bus_velocity / 3600) * 1000) / 60) + settings_.bus_wait_time;
+                    edge1.weight = (route_segment_distance_l / ((settings_.bus_velocity / seconds_in_hour) * meters_per_kilometer) / seconds_in_minute) + settings_.bus_wait_time;
                        
                     graph::Edge<Weight> edge2;
                     edge2.from = vertex_id_by_stop_.at(route.route_stops[to]);
@@ -35,7 +43,7 @@ void TransportRouter::AddGraph(const transport::TransportCatalogue& catalogue) {
                     edge2.route_name = route.route_name;
                     route_segment_distance_r += catalogue.GetDistance(route.route_stops[to],
                                                                       route.route_stops[to - 1]);
-                    edge2.weight = (route_segment_distance_r / ((settings_.bus_velocity / 3600) * 1000) / 60) + settings_.bus_wait_time;
+                    edge2.weight = (route_segment_distance_r / ((settings_.bus_velocity / seconds_in_hour) * meters_per_kilometer) / seconds_in_minute) + settings_.bus_wait_time;
                     
                     graph_temp.AddEdge(edge1);
                     graph_temp.AddEdge(edge2);
